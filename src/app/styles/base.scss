@@ -1,0 +1,24 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap");
+
+:root {
+  //
+  --white-clr: #fff;
+  --light-clr: #eff2f3;
+}
+
+*,
+*:before,
+*:after {
+  user-select: none;
+  box-sizing: border-box;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  margin: 0;
+  user-select: none;
+}
