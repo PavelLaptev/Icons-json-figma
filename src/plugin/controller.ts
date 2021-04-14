@@ -5,130 +5,85 @@
 // UI
 figma.showUI(__html__, { width: 280, height: 350 });
 
-// CAGE LINES
-const cageLines = [
-  "🐝 Not the Bees!",
-  "😈 Cage Rampage!",
-  "🦈 What's in the bag? A shark or something?",
-  "🤘 Sir, that was totally cool!",
-  "🙏 HALLELUJAH!"
-];
-
 ////////////////////////////////////////////////////////////////
-//////////////////////////// FOO ///////////////////////////////
+////////////////////////// FUNCTIONS ///////////////////////////
 ////////////////////////////////////////////////////////////////
 
-let pluginHashDataKey = `cageHashArray-${figma.currentPage.id}`;
-let pluginImgsDataKey = `cageImgsArray-${figma.currentPage.id}`;
+const outlineAll = child => {
+  if (child.strokes.length > 0) {
+    return child.outlineStroke();
+  } else {
+    return child.clone();
+  }
+};
 
-// RECONNECT PLUGIN DATA IF PAGE WAS CHANGED
-figma.on("currentpagechange", () => {
-  pluginHashDataKey = `cageHashArray-${figma.currentPage.id}`;
-  pluginImgsDataKey = `cageImgsArray-${figma.currentPage.id}`;
-});
+const ungroup = (group, parent) => {
+  if (!group.children) return;
 
-//
-const findByHash = (imgsArray, hash) => {
-  imgsArray.map(item => {
-    return (item.fills = item.fills.filter(fill => fill.imageHash !== hash));
+  return group.children.map(child => {
+    let outlinedChild = outlineAll(child);
+    parent.appendChild(outlinedChild);
+    // set absolute position
+    outlinedChild.x = outlinedChild.x + parent.x;
+    outlinedChild.y = outlinedChild.y + parent.y;
   });
 };
 
-//
-const removebyHash = () => {
-  // get Hash Array and clean it from duplicates
-  let imgsIdsArray = figma.root
-    .getPluginData(pluginImgsDataKey)
-    .split(",")
-    .map(id => {
-      return figma.currentPage.findOne(l => l.id === id);
-    })
-    .filter(Boolean);
-
-  let hashArray = figma.root.getPluginData(pluginHashDataKey).split(",");
-
-  hashArray.map(hash => {
-    findByHash(imgsIdsArray, hash);
-  });
-
-  figma.root.setPluginData(pluginImgsDataKey, "");
-  figma.root.setPluginData(pluginHashDataKey, "");
+const cloneChildren = (frame, parent) => {
+  if (frame.visible) {
+    if (frame.type === "INSTANCE") {
+      frame.children.forEach(child => {
+        cloneChildren(child, parent);
+      });
+    } else if (frame.type === "GROUP") {
+      ungroup(frame, parent);
+    } else {
+      parent.appendChild(outlineAll(frame));
+    }
+  }
 };
 
-//
-const addCageToImage = (img, imgArr) => {
-  let cageHash = figma.createImage(
-    imgArr[Math.floor(Math.random() * imgArr.length)]
-  ).hash;
+const convertIcons = () => {
+  let selected = figma.currentPage.selection;
 
-  let currentImageFills = img["fills"];
-  let newFill = {
-    scaleMode: "FILL",
-    type: "IMAGE",
-    imageHash: cageHash
-  };
-  img["fills"] = [...currentImageFills, ...[newFill]];
+  if (selected.length === 0) {
+    figma.notify("Please select icons");
+    return;
+  }
 
-  // HASH and IMGs IDs
-  let imgIdsArray = Array.from(
-    new Set(
-      figma.root
-        .getPluginData(pluginImgsDataKey)
-        .concat(`,${img.id}`)
-        .split(",")
-    )
-  ).toString();
+  selected.forEach((frame: any) => {
+    let cloneFrame = figma.createFrame();
+    cloneFrame.name = frame.name;
+    cloneFrame.resize(frame.width, frame.height);
 
-  let hashArray = Array.from(
-    new Set(
-      figma.root
-        .getPluginData(pluginHashDataKey)
-        .concat(`,${newFill.imageHash}`)
-        .split(",")
-    )
-  ).toString();
-
-  // Set to the plugin storage
-  figma.root.setPluginData(pluginImgsDataKey, imgIdsArray);
-  figma.root.setPluginData(pluginHashDataKey, hashArray);
-};
-
-//
-let isImageFrameFound = [false];
-const findImageByFill = (group, imgArray) => {
-  group.children.forEach((item: any) => {
-    let itemFills = JSON.stringify(item.fills);
-
-    if (typeof itemFills !== "undefined") {
-      if (JSON.stringify(item.fills).includes("IMAGE")) {
-        addCageToImage(item, imgArray);
-        isImageFrameFound.push(true);
+    frame.children.forEach(child => {
+      if (child.visible) {
+        cloneFrame.relativeTransform = child.relativeTransform;
+        cloneChildren(child, cloneFrame);
       }
-    }
-
-    if (item.children && item.children.length > 0) {
-      findImageByFill(item, imgArray);
-    }
+    });
   });
+  return;
 };
+
+////////////////////////////////////////////////////////////////
+///////////////////// ON SELECTION CHANGE //////////////////////
+////////////////////////////////////////////////////////////////
+
+figma.on("selectionchange", () => {
+  let selected = figma.currentPage.selection;
+  figma.ui.postMessage({
+    type: "selected-amount",
+    data: selected.length
+  });
+});
 
 ////////////////////////////////////////////////////////////////
 ///////////////////////// ON MESSAGE ///////////////////////////
 ////////////////////////////////////////////////////////////////
 
 figma.ui.onmessage = async msg => {
-  // UPDATE ON BY ONE
-  if (msg.type === "makeGage!") {
-    findImageByFill(figma.currentPage, msg.data);
-
-    if (!isImageFrameFound.includes(true)) {
-      figma.notify("👽 No images found. Add an image");
-    } else {
-      figma.notify(cageLines[Math.floor(Math.random() * cageLines.length)]);
-    }
-  }
-
-  if (msg.type === "removeGage!") {
-    removebyHash();
+  if (msg.type === "preview") {
+    convertIcons();
   }
 };
