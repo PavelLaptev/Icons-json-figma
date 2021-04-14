@@ -1,5 +1,6 @@
 import * as React from "react";
 import styles from "./app.module.scss";
+import { getSinglePath } from "./utils";
 
 const App = () => {
   const [selectedAmount, setSelectedAmount] = React.useState(0);
@@ -24,6 +25,10 @@ const App = () => {
     onmessage = event => {
       if (event.data.pluginMessage.type === "selected-amount") {
         setSelectedAmount(event.data.pluginMessage.data);
+      }
+
+      if (event.data.pluginMessage.type === "svg-string") {
+        getSinglePath(event.data.pluginMessage.data);
       }
     };
   }, []);
