@@ -4,13 +4,9 @@ import { getSinglePath } from "./utils";
 
 const App = () => {
   const [selectedAmount, setSelectedAmount] = React.useState(0);
-
-  const GeneratedIcons = () => {
-    return <div>icon</div>;
-  };
+  const [icons, setIcons] = React.useState([]);
 
   const handlePreview = () => {
-    console.log("click");
     parent.postMessage(
       {
         pluginMessage: {
@@ -27,11 +23,14 @@ const App = () => {
         setSelectedAmount(event.data.pluginMessage.data);
       }
 
-      if (event.data.pluginMessage.type === "svg-string") {
-        getSinglePath(event.data.pluginMessage.data);
+      if (event.data.pluginMessage.type === "svg-strings") {
+        let svgStrings = event.data.pluginMessage.data;
+        setIcons(
+          svgStrings.map((svgString: string) => getSinglePath(svgString))
+        );
       }
     };
-  }, []);
+  }, [selectedAmount, icons]);
 
   return (
     <div className={styles.app}>
@@ -42,7 +41,23 @@ const App = () => {
         <button onClick={handlePreview}>Preview</button>
       </div>
       <div className={styles.previewView}>
-        <GeneratedIcons />
+        {icons.length > 0
+          ? icons.map((dString: string, i) => {
+              return (
+                <svg
+                  key={`icon-${i}`}
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="black"
+                  fillRule="evenodd"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d={dString} />
+                </svg>
+              );
+            })
+          : null}
       </div>
     </div>
   );
