@@ -22,41 +22,48 @@ const convertIcons = async () => {
 
   selected.forEach((frame: any) => {
     let cloneFrame = figma.createFrame();
-    cloneFrame.backgrounds = [];
     cloneFrame.name = frame.name;
     cloneFrame.resize(frame.width, frame.height);
 
     frame.children.forEach(child => {
       if (child.visible) {
-        cloneFrame.relativeTransform = child.relativeTransform;
+        console.log(child);
+        // cloneFrame.relativeTransform = child.relativeTransform;
+        cloneFrame.x = child.x;
+        cloneFrame.y = child.y;
         clone(child, cloneFrame);
+        // console.log(cloneFrame.children);
       }
     });
 
-    cloneFrame.children.forEach(child => {
-      figma.flatten([child]);
-    });
+    // let childrenGroup = figma.group(cloneFrame.children, cloneFrame);
 
-    let unionSVG = figma.union([cloneFrame], figma.currentPage);
-    let childrenGroup = figma.group(cloneFrame.children, cloneFrame);
-    let groupPosition = {
-      x: childrenGroup.x,
-      y: childrenGroup.y
-    };
+    // let frameProps = {
+    //   rotation: cloneFrame.rotation,
+    //   width: cloneFrame.width,
+    //   height: cloneFrame.height
+    // };
 
-    let exportContainer = figma.createFrame();
-    exportContainer.resize(cloneFrame.width, cloneFrame.height);
-    exportContainer.backgrounds = [];
-    exportContainer.appendChild(unionSVG);
-    unionSVG.x = groupPosition.x;
-    unionSVG.y = groupPosition.y;
+    // let unionSVG = figma.union([cloneFrame], figma.currentPage);
+    // unionSVG.rotation = -frameProps.rotation;
 
-    exportContainer.exportAsync({ format: "SVG" }).then(result => {
+    // let exportContainer = figma.createFrame();
+    // exportContainer.resize(frameProps.width, frameProps.height);
+    // exportContainer.backgrounds = [];
+    // let flattenSVG = figma.flatten(cloneFrame.children);
+    figma.flatten(cloneFrame.children);
+    // console.log()
+    // exportContainer.appendChild(flattenSVG);
+
+    // unionSVG.x = groupPosition.x;
+    // unionSVG.y = groupPosition.y;
+
+    cloneFrame.exportAsync({ format: "SVG" }).then(result => {
       let svgString = String.fromCharCode.apply(null, result);
 
       svgStrings.push(svgString);
 
-      exportContainer.remove();
+      // exportContainer.remove();
     });
   });
   return;

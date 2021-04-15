@@ -9,7 +9,10 @@ const clone = (frame, parent) => {
     } else if (frame.type === "GROUP") {
       ungroup(frame, parent);
     } else {
-      parent.appendChild(outline(frame));
+      console.log(frame.name);
+      outline(frame).map(item => {
+        parent.appendChild(item);
+      });
     }
   }
 };
