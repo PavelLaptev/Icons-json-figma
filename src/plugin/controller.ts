@@ -54,8 +54,8 @@ const convertIcons = async () => {
           figma.flatten(exportedNode.children);
           let svgString = String.fromCharCode.apply(null, result);
           svgStrings.push(svgString);
-          cloneFrame.remove();
-          exportedNode.remove();
+          // cloneFrame.remove();
+          // exportedNode.remove();
         });
       });
     } catch (err) {
