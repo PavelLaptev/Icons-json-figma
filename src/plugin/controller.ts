@@ -11,6 +11,13 @@ figma.showUI(__html__, { width: 280, height: 350 });
 ////////////////////////// FUNCTIONS ///////////////////////////
 ////////////////////////////////////////////////////////////////
 let svgStrings = [];
+let svgErrors = [];
+
+const postMsg = (type, data) =>
+  figma.ui.postMessage({
+    type: type,
+    data: data
+  });
 
 const convertIcons = async () => {
   let selected = figma.currentPage.selection;
@@ -20,53 +27,47 @@ const convertIcons = async () => {
     return;
   }
 
-  selected.forEach((frame: any) => {
+  return await selected.map((frame: any) => {
     let cloneFrame = figma.createFrame();
     cloneFrame.name = frame.name;
+    cloneFrame.backgrounds = [];
     cloneFrame.resize(frame.width, frame.height);
 
     frame.children.forEach(child => {
       if (child.visible) {
-        console.log(child);
+        // console.log(child);
         // cloneFrame.relativeTransform = child.relativeTransform;
         cloneFrame.x = child.x;
         cloneFrame.y = child.y;
         clone(child, cloneFrame);
-        // console.log(cloneFrame.children);
       }
     });
 
-    // let childrenGroup = figma.group(cloneFrame.children, cloneFrame);
+    try {
+      return cloneFrame.exportAsync({ format: "SVG" }).then(result => {
+        let svgString = String.fromCharCode.apply(null, result);
 
-    // let frameProps = {
-    //   rotation: cloneFrame.rotation,
-    //   width: cloneFrame.width,
-    //   height: cloneFrame.height
-    // };
+        let exportedNode = figma.createNodeFromSvg(svgString);
+        figma.union(exportedNode.children, exportedNode);
 
-    // let unionSVG = figma.union([cloneFrame], figma.currentPage);
-    // unionSVG.rotation = -frameProps.rotation;
+        exportedNode.exportAsync({ format: "SVG" }).then(result => {
+          figma.flatten(exportedNode.children);
+          let svgString = String.fromCharCode.apply(null, result);
+          svgStrings.push(svgString);
+          cloneFrame.remove();
+          exportedNode.remove();
+        });
+      });
+    } catch (err) {
+      let customErrorMsg = `Error in "${cloneFrame.name}" icon`;
+      console.error(customErrorMsg);
+      svgErrors.push(customErrorMsg);
 
-    // let exportContainer = figma.createFrame();
-    // exportContainer.resize(frameProps.width, frameProps.height);
-    // exportContainer.backgrounds = [];
-    // let flattenSVG = figma.flatten(cloneFrame.children);
-    figma.flatten(cloneFrame.children);
-    // console.log()
-    // exportContainer.appendChild(flattenSVG);
+      postMsg("svg-errors", svgErrors);
 
-    // unionSVG.x = groupPosition.x;
-    // unionSVG.y = groupPosition.y;
-
-    cloneFrame.exportAsync({ format: "SVG" }).then(result => {
-      let svgString = String.fromCharCode.apply(null, result);
-
-      svgStrings.push(svgString);
-
-      // exportContainer.remove();
-    });
+      cloneFrame.remove(); // remove failed frame clone
+    }
   });
-  return;
 };
 
 ////////////////////////////////////////////////////////////////
@@ -75,10 +76,7 @@ const convertIcons = async () => {
 
 figma.on("selectionchange", () => {
   let selected = figma.currentPage.selection;
-  figma.ui.postMessage({
-    type: "selected-amount",
-    data: selected.length
-  });
+  postMsg("selected-amount", selected.length);
 });
 
 ////////////////////////////////////////////////////////////////
@@ -87,11 +85,13 @@ figma.on("selectionchange", () => {
 
 figma.ui.onmessage = async msg => {
   if (msg.type === "preview") {
-    await convertIcons();
-    figma.ui.postMessage({
-      type: "svg-strings",
-      data: svgStrings
+    // postMsg("svg-errors", []);
+    // svgErrors = [];
+    await convertIcons().then(() => {
+      postMsg("svg-strings", svgStrings);
+      //
+      svgStrings = [];
+      svgErrors = [];
     });
-    svgStrings = [];
   }
 };

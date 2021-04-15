@@ -5,8 +5,10 @@ import { getSinglePath } from "./utils";
 const App = () => {
   const [selectedAmount, setSelectedAmount] = React.useState(0);
   const [icons, setIcons] = React.useState([]);
+  const [errors, setErrors] = React.useState([] as Array<string>);
 
   const handlePreview = () => {
+    // setErrors([]);
     parent.postMessage(
       {
         pluginMessage: {
@@ -29,22 +31,30 @@ const App = () => {
           svgStrings.map((svgString: string) => getSinglePath(svgString))
         );
       }
+
+      if (event.data.pluginMessage.type === "svg-errors") {
+        let svgErrors = event.data.pluginMessage.data;
+        setErrors(svgErrors);
+      }
     };
-  }, [selectedAmount, icons]);
+  }, [selectedAmount, icons, errors]);
 
   return (
-    <div className={styles.app}>
-      <div>
+    <main className={styles.app}>
+      <section>
         <h2>selected {selectedAmount} icons</h2>
-      </div>
-      <div>
+      </section>
+
+      <section>
         <button onClick={handlePreview}>Preview</button>
-      </div>
-      <div className={styles.previewView}>
+      </section>
+
+      <section className={styles.previewView}>
         {icons.length > 0
           ? icons.map((dString: string, i) => {
               return (
                 <svg
+                  className={styles.icon}
                   key={`icon-${i}`}
                   width="24"
                   height="24"
@@ -58,8 +68,18 @@ const App = () => {
               );
             })
           : null}
-      </div>
-    </div>
+      </section>
+
+      {errors.length > 0 ? (
+        <section>
+          <h3>Oops…</h3>
+          {errors.map((error, i) => {
+            return <div key={`error-${i}`}>{error}</div>;
+          })}
+          <span>Please check required conditions</span>
+        </section>
+      ) : null}
+    </main>
   );
 };
 

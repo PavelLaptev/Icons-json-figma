@@ -2,6 +2,7 @@
 // Please do not change this file!
 interface CssExports {
   app: string;
+  icon: string;
   previewView: string;
 }
 export const cssExports: CssExports;

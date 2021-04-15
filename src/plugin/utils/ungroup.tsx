@@ -5,6 +5,7 @@ const ungroup = (group, parent) => {
 
   return group.children.map(child => {
     let outlinedChild = outline(child)[0];
+
     parent.appendChild(outlinedChild);
     // set absolute position
     outlinedChild.x = outlinedChild.x + parent.x;
