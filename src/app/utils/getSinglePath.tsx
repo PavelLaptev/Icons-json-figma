@@ -1,10 +1,8 @@
-const getSinglePath = (string: string) => {
+const getSinglePath = (svgstring: string) => {
   let parser = new DOMParser();
-  let svgDOM = parser.parseFromString(string, "image/svg+xml");
-  let svgPaths = svgDOM.getElementsByTagName("path");
-
-  let svgD = [...svgPaths].map(
-    (path: SVGElement) => path.attributes["d"].nodeValue
+  let svgDOM = parser.parseFromString(svgstring, "image/svg+xml");
+  let svgD = [...svgDOM.querySelectorAll("path")].map(
+    path => path.attributes["d"].value
   );
 
   let joinedD = svgD.join(" ");
