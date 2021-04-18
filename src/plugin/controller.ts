@@ -1,5 +1,3 @@
-// import { outline } from "./utils";
-
 ////////////////////////////////////////////////////////////////
 ///////////////////////// UI AND DATA //////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -28,7 +26,7 @@ const postMsg = (type, data) =>
 const cloneFrame = ref => {
   let clone = figma.createFrame();
   clone.name = ref.name;
-  clone.fills = ref.fills;
+  clone.fills = ref.fills ? ref.fills : [];
   clone.resize(ref.width, ref.height);
   clone.x = ref.x;
   clone.y = ref.y;
@@ -48,23 +46,31 @@ const detachAndUnion = (page: PageNode) => {
 const convertIcons = async () => {
   const nodes = detachAndUnion(figma.currentPage);
 
-  await nodes.forEach(c =>
-    c.exportAsync({ format: "SVG" }).then(result => {
-      let svgString = String.fromCharCode.apply(null, result);
-      let rawSVGNode = figma.createNodeFromSvg(svgString) as FrameNode;
-      figma.flatten([figma.union(rawSVGNode.children, rawSVGNode)]);
+  await nodes.forEach(c => {
+    try {
+      c.exportAsync({ format: "SVG" }).then(result => {
+        let svgString = String.fromCharCode.apply(null, result);
+        let rawSVGNode = figma.createNodeFromSvg(svgString) as FrameNode;
+        figma.flatten([figma.union(rawSVGNode.children, rawSVGNode)]);
 
-      rawSVGNode.exportAsync({ format: "SVG" }).then(result => {
-        svgStrings.push({
-          name: c.name,
-          data: String.fromCharCode.apply(null, result)
-        } as svgStringObject);
+        rawSVGNode.exportAsync({ format: "SVG" }).then(result => {
+          svgStrings.push({
+            name: c.name,
+            data: String.fromCharCode.apply(null, result)
+          } as svgStringObject);
 
-        c.remove();
-        rawSVGNode.remove();
+          c.remove();
+          rawSVGNode.remove();
+        });
       });
-    })
-  );
+    } catch (err) {
+      let errorMsg = `📛 "${c.name}" icon error. Try to simplify it manually`;
+      figma.notify(errorMsg, { timeout: 2000 });
+      console.error(errorMsg);
+      console.error(err);
+      c.remove();
+    }
+  });
 };
 
 // ////////////////////////////////////////////////////////////////

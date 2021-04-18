@@ -3,22 +3,30 @@
 interface CssExports {
   app: string;
   beginningView: string;
+  beginningView_hide: string;
+  beginningView_selected: string;
+  button: string;
   floatingSection: string;
+  hide: string;
   icon: string;
+  lineanimation: string;
   machine: string;
   machine_alphabet: string;
   machine_alphabet_thumb: string;
   machine_amount: string;
   machine_base: string;
   machine_greenlamp: string;
+  machine_iconcards: string;
   machine_lever: string;
+  machine_liveline: string;
+  machine_liveline_wave: string;
   machine_orangelamp: string;
   machine_pressure: string;
   machine_pressure_arrow: string;
-  pelaseSelect: string;
-  pelaseSelect_cursor: string;
-  pelaseSelect_selelction: string;
-  pelaseSelect_text: string;
+  pleaseSelect: string;
+  pleaseSelect_cursor: string;
+  pleaseSelect_selelction: string;
+  pleaseSelect_text: string;
   previewView: string;
 }
 export const cssExports: CssExports;

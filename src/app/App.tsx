@@ -7,6 +7,19 @@ const MachineSection = props => {
     <div className={`${styles.machine} ${props.className}`}>
       <h3 className={styles.machine_amount}>{props.amount}</h3>
 
+      <div
+        className={`${styles.machine_iconcards} ${
+          !props.amount ? styles.hide : null
+        }`}
+        style={{ backgroundPositionY: props.amount ? "0" : "60px" }}
+      />
+
+      <div
+        className={`${styles.machine_liveline} ${
+          props.amount ? styles.machine_liveline_wave : null
+        }`}
+      />
+
       <svg
         className={styles.machine_pressure}
         width="37"
@@ -19,6 +32,9 @@ const MachineSection = props => {
           d="M18.3458 0L20.3458 20H16.3458L18.3458 0Z"
           fill="black"
           className={styles.machine_pressure_arrow}
+          style={{
+            transform: props.amount ? "rotate(35deg)" : "rotate(-35deg)"
+          }}
         />
         <path
           d="M18.3458 16.5C21.6277 16.5 24.4475 18.1374 25.8646 20.5H10.827C12.2441 18.1374 15.0639 16.5 18.3458 16.5Z"
@@ -60,15 +76,16 @@ const MachineSection = props => {
         viewBox="0 0 36 23"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        style={
+          props.amount || props.icons.length > 0
+            ? { stroke: "#009a67", fill: "#ddffef" }
+            : { stroke: "black", fill: "white" }
+        }
       >
+        <path d="M1 2.94169L23.6134 0.978545C29.6744 0.452371 34.8853 5.23043 34.8853 11.3142V11.3142C34.8853 17.398 29.6744 22.176 23.6134 21.6499L1 19.6867V2.94169Z" />
         <path
-          d="M1 2.94169L23.6134 0.978545C29.6744 0.452371 34.8853 5.23043 34.8853 11.3142V11.3142C34.8853 17.398 29.6744 22.176 23.6134 21.6499L1 19.6867V2.94169Z"
-          fill="white"
-          stroke="black"
-        />
-        <path
+          fill="none"
           d="M1 8.02638L20.1147 6.96265L18.377 9.13846L20.1147 11.3143L18.377 13.4901L20.1147 15.6659L1 14.6022"
-          stroke="black"
         />
       </svg>
 
@@ -118,10 +135,17 @@ const MachineSection = props => {
 
 const PleaseSelectSection = props => {
   return (
-    <div className={`${styles.pelaseSelect} ${props.className}`}>
-      <div className={styles.pelaseSelect_cursor}></div>
-      <div className={styles.pelaseSelect_selelction} />
-      <h3 className={styles.pelaseSelect_text}>
+    <div
+      className={`${styles.pleaseSelect}`}
+      style={
+        props.amount || props.icons.length > 0
+          ? { opacity: "0", transform: "translateY(10px)" }
+          : { opacity: "1" }
+      }
+    >
+      <div className={styles.pleaseSelect_cursor}></div>
+      <div className={styles.pleaseSelect_selelction} />
+      <h3 className={styles.pleaseSelect_text}>
         Please select some icons to start
       </h3>
     </div>
@@ -146,7 +170,31 @@ const App = () => {
     );
   };
 
-  const handleDownload = () => {};
+  const download = (content, fileName, contentType) => {
+    var a = document.createElement("a");
+    var file = new Blob([JSON.stringify(content, null, 2)], {
+      type: contentType
+    });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+  };
+
+  const convertArrayToObject = (array, key) => {
+    const initialValue = {};
+    return array.reduce((obj, item) => {
+      return {
+        ...obj,
+        [item[key]]: item.data
+      };
+    }, initialValue);
+  };
+
+  const handleDownload = () => {
+    let iconsObj = convertArrayToObject(iconsData, "name");
+
+    download(iconsObj, "iconsJSON", "application/json");
+  };
 
   React.useEffect(() => {
     onmessage = event => {
@@ -169,42 +217,60 @@ const App = () => {
 
   return (
     <main className={styles.app}>
-      <section className={styles.floatingSection}>
-        {selectedAmount ? (
-          <button onClick={handlePreview}>
-            {`Preview ${selectedAmount} icons`}
-          </button>
-        ) : null}
-        {isIcons() ? (
-          <button onClick={handleDownload}>Download JSON</button>
-        ) : null}
+      <section
+        className={`${styles.floatingSection}`}
+        style={
+          !selectedAmount && !isIcons()
+            ? { transform: "translateY(45px)" }
+            : null
+        }
+      >
+        <button
+          className={`${styles.button} ${!isIcons() ? styles.hide : null}`}
+          onClick={handleDownload}
+        >
+          Download JSON
+        </button>
+
+        <button
+          className={`${styles.button}`}
+          style={isIcons() ? { height: "32px" } : null}
+          onClick={handlePreview}
+        >
+          {selectedAmount ? `Preview ${selectedAmount} icons` : "Reset"}
+        </button>
       </section>
 
-      <section className={styles.beginningView}>
-        <MachineSection amount={selectedAmount} />
-        <PleaseSelectSection />
+      <section
+        className={`${styles.beginningView} ${
+          isIcons() ? styles.beginningView_hide : null
+        }
+        ${selectedAmount ? styles.beginningView_selected : null}`}
+      >
+        <MachineSection icons={iconsData} amount={selectedAmount} />
+        <PleaseSelectSection icons={iconsData} amount={selectedAmount} />
       </section>
 
-      <section className={styles.previewView}>
-        {isIcons()
-          ? iconsData.map((icon: svgStringObject, i) => {
-              return (
-                <svg
-                  className={styles.icon}
-                  key={`icon-${i}`}
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="black"
-                  fillRule="evenodd"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d={icon.data} />
-                </svg>
-              );
-            })
-          : null}
-      </section>
+      {isIcons() ? (
+        <section className={styles.previewView}>
+          {iconsData.map((icon: svgStringObject, i) => {
+            return (
+              <svg
+                className={styles.icon}
+                key={`icon-${i}`}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="black"
+                fillRule="evenodd"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d={icon.data} />
+              </svg>
+            );
+          })}
+        </section>
+      ) : null}
     </main>
   );
 };
