@@ -4,6 +4,128 @@
   height: 100%;
   padding: 16px;
   overflow-x: hidden;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.beginningView {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pelaseSelect {
+  position: relative;
+  display: flex;
+  max-width: 180px;
+  margin-top: 10px;
+  &_selelction {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 80%;
+    height: 100%;
+    background: rgba(68, 161, 248, 0.1);
+    border: 1px solid #44a1f8;
+  }
+  &_cursor {
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    display: flex;
+    width: 22px;
+    height: 22px;
+    background-image: url(./assets/cursor.png);
+    background-size: cover;
+  }
+  &_text {
+    font-weight: bold;
+    font-size: 16px;
+    white-space: break-spaces;
+    text-align: center;
+    margin: 8px 0;
+  }
+}
+
+.machine {
+  position: relative;
+  display: flex;
+  width: 260px;
+  height: 260px;
+  transform: translateX(8px);
+  // border: 1px solid;
+
+  &_base {
+    position: absolute;
+    z-index: 10;
+    left: 40px;
+    width: 192px;
+    height: 249px;
+    background-image: url(./assets/machine.svg);
+    background-size: cover;
+  }
+
+  &_lever {
+    transform-origin: bottom right;
+    position: absolute;
+    top: 60px;
+    left: 32px;
+    transform: rotate(-55deg);
+  }
+
+  &_greenlamp {
+    position: absolute;
+    z-index: 20;
+    left: 190px;
+    top: 109px;
+  }
+
+  &_orangelamp {
+    position: absolute;
+    z-index: 20;
+    left: 190px;
+    top: 140px;
+  }
+
+  &_alphabet {
+    position: absolute;
+    top: 182px;
+    left: 127px;
+    z-index: 20;
+    border-radius: 20px;
+    width: 32px;
+    height: 14px;
+    border: 1px solid black;
+    background-color: #ebebeb;
+    &_thumb {
+      position: absolute;
+      top: -4px;
+      left: -4px;
+    }
+  }
+
+  &_pressure {
+    position: absolute;
+    top: 110px;
+    left: 125px;
+    z-index: 20;
+    &_arrow {
+      transform: rotate(-35deg);
+      transform-origin: bottom center;
+    }
+  }
+
+  &_amount {
+    position: absolute;
+    text-align: center;
+    width: 40px;
+    top: 100px;
+    left: 62px;
+    color: white;
+    z-index: 20;
+  }
 }
 
 .previewView {
@@ -11,6 +133,11 @@
   flex-wrap: wrap;
 }
 
+.floatingSection {
+  position: fixed;
+  bottom: 20px;
+}
+
 .icon {
-  margin: 4px;
+  margin: 12px;
 }

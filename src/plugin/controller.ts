@@ -1,17 +1,23 @@
-import { clone } from "./utils";
+// import { outline } from "./utils";
 
 ////////////////////////////////////////////////////////////////
 ///////////////////////// UI AND DATA //////////////////////////
 ////////////////////////////////////////////////////////////////
 
 // UI
-figma.showUI(__html__, { width: 280, height: 350 });
+figma.showUI(__html__, { width: 320, height: 420 });
 
-////////////////////////////////////////////////////////////////
-////////////////////////// FUNCTIONS ///////////////////////////
-////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////
+// ////////////////////////// FUNCTIONS ///////////////////////////
+// ////////////////////////////////////////////////////////////////
 let svgStrings = [];
-let svgErrors = [];
+// let svgErrors = [];
+
+const isNode = (c: BaseNode): c is InstanceNode =>
+  c.type === "INSTANCE" ||
+  c.type === "FRAME" ||
+  c.type === "COMPONENT" ||
+  c.type === "GROUP";
 
 const postMsg = (type, data) =>
   figma.ui.postMessage({
@@ -19,69 +25,60 @@ const postMsg = (type, data) =>
     data: data
   });
 
-const convertIcons = async () => {
-  let selected = figma.currentPage.selection;
-
-  if (selected.length === 0) {
-    figma.notify("Please select icons");
-    return;
-  }
-
-  return await selected.map((frame: any) => {
-    let cloneFrame = figma.createFrame();
-    cloneFrame.name = frame.name;
-    cloneFrame.backgrounds = [];
-    cloneFrame.resize(frame.width, frame.height);
-
-    frame.children.forEach(child => {
-      if (child.visible) {
-        // console.log(child);
-        // cloneFrame.relativeTransform = child.relativeTransform;
-        cloneFrame.x = child.x;
-        cloneFrame.y = child.y;
-        clone(child, cloneFrame);
-      }
-    });
-
-    try {
-      return cloneFrame.exportAsync({ format: "SVG" }).then(result => {
-        let svgString = String.fromCharCode.apply(null, result);
-
-        let exportedNode = figma.createNodeFromSvg(svgString);
-        figma.union(exportedNode.children, exportedNode);
-
-        exportedNode.exportAsync({ format: "SVG" }).then(result => {
-          figma.flatten(exportedNode.children);
-          let svgString = String.fromCharCode.apply(null, result);
-          svgStrings.push(svgString);
-          // cloneFrame.remove();
-          // exportedNode.remove();
-        });
-      });
-    } catch (err) {
-      let customErrorMsg = `Error in "${cloneFrame.name}" icon`;
-      console.error(customErrorMsg);
-      svgErrors.push(customErrorMsg);
-
-      postMsg("svg-errors", svgErrors);
-
-      cloneFrame.remove(); // remove failed frame clone
-    }
-  });
+const cloneFrame = ref => {
+  let clone = figma.createFrame();
+  clone.name = ref.name;
+  clone.fills = ref.fills;
+  clone.resize(ref.width, ref.height);
+  clone.x = ref.x;
+  clone.y = ref.y;
+  clone.rotation = ref.rotation;
+  return clone;
 };
 
-////////////////////////////////////////////////////////////////
-///////////////////// ON SELECTION CHANGE //////////////////////
-////////////////////////////////////////////////////////////////
+const detachAndUnion = (page: PageNode) => {
+  const selection = page.selection.map(c => c.clone());
+  const frameClones = selection.map(c => cloneFrame(c));
+
+  selection.filter(isNode).forEach((c, i) => figma.union([c], frameClones[i]));
+
+  return frameClones as Array<FrameNode>;
+};
+
+const convertIcons = async () => {
+  const nodes = detachAndUnion(figma.currentPage);
+
+  await nodes.forEach(c =>
+    c.exportAsync({ format: "SVG" }).then(result => {
+      let svgString = String.fromCharCode.apply(null, result);
+      let rawSVGNode = figma.createNodeFromSvg(svgString) as FrameNode;
+      figma.flatten([figma.union(rawSVGNode.children, rawSVGNode)]);
+
+      rawSVGNode.exportAsync({ format: "SVG" }).then(result => {
+        svgStrings.push({
+          name: c.name,
+          data: String.fromCharCode.apply(null, result)
+        } as svgStringObject);
+
+        c.remove();
+        rawSVGNode.remove();
+      });
+    })
+  );
+};
+
+// ////////////////////////////////////////////////////////////////
+// ///////////////////// ON SELECTION CHANGE //////////////////////
+// ////////////////////////////////////////////////////////////////
 
 figma.on("selectionchange", () => {
   let selected = figma.currentPage.selection;
   postMsg("selected-amount", selected.length);
 });
 
-////////////////////////////////////////////////////////////////
-///////////////////////// ON MESSAGE ///////////////////////////
-////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////
+// ///////////////////////// ON MESSAGE ///////////////////////////
+// ////////////////////////////////////////////////////////////////
 
 figma.ui.onmessage = async msg => {
   if (msg.type === "preview") {
@@ -91,7 +88,6 @@ figma.ui.onmessage = async msg => {
       postMsg("svg-strings", svgStrings);
       //
       svgStrings = [];
-      svgErrors = [];
     });
   }
 };

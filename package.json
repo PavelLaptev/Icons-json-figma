@@ -9,8 +9,6 @@
     "prettier:format": "prettier --write 'src/**/*.{js,jsx,ts,tsx,css,json}' "
   },
   "dependencies": {
-    "base64-arraybuffer": "^0.2.0",
-    "base64-to-uint8array": "^1.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },

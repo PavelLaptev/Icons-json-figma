@@ -2,7 +2,23 @@
 // Please do not change this file!
 interface CssExports {
   app: string;
+  beginningView: string;
+  floatingSection: string;
   icon: string;
+  machine: string;
+  machine_alphabet: string;
+  machine_alphabet_thumb: string;
+  machine_amount: string;
+  machine_base: string;
+  machine_greenlamp: string;
+  machine_lever: string;
+  machine_orangelamp: string;
+  machine_pressure: string;
+  machine_pressure_arrow: string;
+  pelaseSelect: string;
+  pelaseSelect_cursor: string;
+  pelaseSelect_selelction: string;
+  pelaseSelect_text: string;
   previewView: string;
 }
 export const cssExports: CssExports;

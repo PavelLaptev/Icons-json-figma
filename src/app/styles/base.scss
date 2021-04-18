@@ -3,7 +3,7 @@
 :root {
   //
   --white-clr: #fff;
-  --light-clr: #eff2f3;
+  --light-clr: #f1f3f3;
 }
 
 *,
@@ -21,4 +21,8 @@ body {
   font-size: 12px;
   margin: 0;
   user-select: none;
+  background: var(--light-clr);
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
