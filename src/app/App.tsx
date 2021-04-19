@@ -1,6 +1,6 @@
 import * as React from "react";
 import styles from "./app.module.scss";
-import { getSinglePath } from "./utils";
+import { getSinglePath, download, convertArrayToObject } from "./utils";
 
 const MachineSection = props => {
   return (
@@ -8,10 +8,8 @@ const MachineSection = props => {
       <h3 className={styles.machine_amount}>{props.amount}</h3>
 
       <div
-        className={`${styles.machine_iconcards} ${
-          !props.amount ? styles.hide : null
-        }`}
-        style={{ backgroundPositionY: props.amount ? "0" : "60px" }}
+        className={`${styles.machine_iconcards}`}
+        style={!props.amount ? { backgroundPositionY: "-50px" } : null}
       />
 
       <div
@@ -157,6 +155,7 @@ const App = () => {
   const [iconsData, setIconsData] = React.useState(
     [] as Array<svgStringObject>
   );
+
   const isIcons = () => iconsData.length > 0;
 
   const handlePreview = () => {
@@ -170,47 +169,28 @@ const App = () => {
     );
   };
 
-  const download = (content, fileName, contentType) => {
-    var a = document.createElement("a");
-    var file = new Blob([JSON.stringify(content, null, 2)], {
-      type: contentType
-    });
-    a.href = URL.createObjectURL(file);
-    a.download = fileName;
-    a.click();
-  };
-
-  const convertArrayToObject = (array, key) => {
-    const initialValue = {};
-    return array.reduce((obj, item) => {
-      return {
-        ...obj,
-        [item[key]]: item.data
-      };
-    }, initialValue);
-  };
-
   const handleDownload = () => {
     let iconsObj = convertArrayToObject(iconsData, "name");
-
-    download(iconsObj, "iconsJSON", "application/json");
+    download(iconsObj, "icons", iconsData);
   };
 
   React.useEffect(() => {
     onmessage = event => {
-      if (event.data.pluginMessage.type === "selected-amount") {
-        setSelectedAmount(event.data.pluginMessage.data);
-      }
+      if (typeof event.data.pluginMessage !== "undefined") {
+        if (event.data.pluginMessage.type === "selected-amount") {
+          setSelectedAmount(event.data.pluginMessage.data);
+        }
 
-      if (event.data.pluginMessage.type === "svg-strings") {
-        let svgStrings = event.data.pluginMessage.data;
+        if (event.data.pluginMessage.type === "svg-strings") {
+          let svgStrings = event.data.pluginMessage.data;
 
-        const icons = svgStrings.map((svgString: svgStringObject) => ({
-          name: svgString.name,
-          data: getSinglePath(svgString.data)
-        }));
+          const icons = svgStrings.map((svgString: svgStringObject) => ({
+            name: svgString.name,
+            ...getSinglePath(svgString.data)
+          }));
 
-        setIconsData(icons);
+          setIconsData(icons);
+        }
       }
     };
   }, [selectedAmount, iconsData]);
@@ -258,9 +238,9 @@ const App = () => {
               <svg
                 className={styles.icon}
                 key={`icon-${i}`}
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
+                width={icon.size.width}
+                height={icon.size.height}
+                viewBox={icon.viewBox}
                 fill="black"
                 fillRule="evenodd"
                 xmlns="http://www.w3.org/2000/svg"

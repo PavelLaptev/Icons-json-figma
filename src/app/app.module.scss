@@ -66,7 +66,6 @@
   width: 260px;
   height: 260px;
   transform: translateX(8px);
-  // border: 1px solid;
 
   &_base {
     position: absolute;
@@ -125,7 +124,7 @@
     &_arrow {
       transform: rotate(-35deg);
       transform-origin: bottom center;
-      transition: all 0.1s ease;
+      transition: transform 0.1s ease;
     }
   }
 
@@ -143,13 +142,14 @@
     position: absolute;
     z-index: 20;
     left: 56px;
-    top: -17px;
+    top: -82px;
     width: 130px;
-    height: 60px;
+    height: 126px;
     background-image: url(./assets/icon-cards.svg);
+    background-position-y: 60px;
     background-size: 130px 85px;
     background-repeat: no-repeat;
-    transition: all 0.2s ease;
+    transition: background-position-y 0.5s cubic-bezier(0, 0, 0, 0.72);
   }
 
   &_liveline {
